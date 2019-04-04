@@ -2,42 +2,20 @@ var gulp = require('gulp');
 var uglify = require('gulp-uglify');
 var livereload = require('gulp-livereload');
 var concat = require('gulp-concat');
-var minifyCss = require('gulp-minify-css');
 var autoprefixer = require('gulp-autoprefixer');
 var plumber = require('gulp-plumber');
 var sourcemaps = require('gulp-sourcemaps');
 var sass = require('gulp-sass');
 var babel = require('gulp-babel');
-
-// // Less plugins
-// var less = require('gulp-less');
-// var LessAutoprefix = require('less-plugin-autoprefix');
-// var lessAutoprefix = new LessAutoprefix({
-// 	browsers: ['last 2 versions']
-// });
+// Image compression
+var imagemin = require('gulp-imagemin');
+var imageminPngquant = require('imagemin-pngquant');
+var imageminJpegRecompress = require('imagemin-jpeg-recompress');
 
 // File paths
 var DIST_PATH = 'public/dist';
 var SCRIPTS_PATH = 'public/scripts/**/*.js';
-var CSS_PATH = 'public/css/**/*.css';
-
-// // Styles
-// gulp.task('styles', function () {
-// 	console.log('starting styles task');
-// 	return gulp.src(['public/css/reset.css', CSS_PATH])
-// 		.pipe(plumber(function (err) {
-// 			console.log('Styles Task Error');
-// 			console.log(err);
-// 			this.emit('end');
-// 		}))
-// 		.pipe(sourcemaps.init())
-// 		.pipe(autoprefixer())
-// 		.pipe(concat('styles.css'))
-// 		.pipe(minifyCss())
-// 		.pipe(sourcemaps.write())
-// 		.pipe(gulp.dest(DIST_PATH))
-// 		.pipe(livereload());
-// });
+var IMAGES_PATH = 'public/images/**/*.{png,jpeg,jpg,svg,gif}';
 
 // Styles For SCSS
 gulp.task('styles', function () {
@@ -81,10 +59,19 @@ gulp.task('scripts', function () {
 
 // Images
 gulp.task('images', function () {
-	console.log('starting images task');
+	return gulp.src(IMAGES_PATH)
+		.pipe(imagemin([
+			imagemin.gifsicle(),
+			imagemin.jpegtran(),
+			imagemin.optipng(),
+			imagemin.svgo(),
+			imageminPngquant(),
+			imageminJpegRecompress()
+		]))
+		.pipe(gulp.dest(DIST_PATH + '/images'));
 });
 
-gulp.task('default', ['styles', 'scripts'], function () {
+gulp.task('default', ['images', 'styles', 'scripts'], function () {
 	console.log('Starting default task');
 });
 
@@ -93,6 +80,5 @@ gulp.task('watch', ['default'], function () {
 	require('./server.js');
 	livereload.listen();
 	gulp.watch(SCRIPTS_PATH, ['scripts']);
-	// gulp.watch(CSS_PATH, ['styles']);
 	gulp.watch('public/scss/**/*.scss', ['styles']);
 });
